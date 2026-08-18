@@ -1,0 +1,64 @@
+name: Build picospeccy_ili9341_usbhost (with TinyUSB)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/rp2040-ili9341-usbhost
+
+jobs:
+  build-pico-tinyusb:
+    runs-on: ubuntu-latest
+    env:
+      PICO_SDK_PATH: ${{ runner.temp }}/pico-sdk
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake git libusb-1.0-0-dev python3-pip
+
+      - name: Clone Pico SDK
+        run: |
+          git clone https://github.com/raspberrypi/pico-sdk.git $PICO_SDK_PATH
+          cd $PICO_SDK_PATH
+          git checkout master || true
+          git submodule update --init --recursive
+
+      - name: Clone tinyusb into SDK externals
+        run: |
+          mkdir -p $PICO_SDK_PATH/external
+          git clone https://github.com/hathach/tinyusb.git $PICO_SDK_PATH/external/tinyusb
+          cd $PICO_SDK_PATH/external/tinyusb
+          git checkout master || true
+          git submodule update --init --recursive || true
+
+      - name: Create build dir
+        run: |
+          cd MCUME_pico
+          mkdir -p build
+          cd build
+
+      - name: Configure CMake (with TinyUSB)
+        run: |
+          cd MCUME_pico/build
+          cmake .. -DTARGET=picospeccy_ili9341_usbhost -DUSE_TINYUSB_HOST=ON -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cd MCUME_pico/build
+          make -j$(nproc)
+
+      - name: Collect artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: picospeccy_ili9341_usbhost-build
+          path: |
+            MCUME_pico/build/*.uf2
+            MCUME_pico/build/*.elf
+            MCUME_pico/build/*.map
+            MCUME_pico/build/*.hex
