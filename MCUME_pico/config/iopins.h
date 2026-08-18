@@ -2,6 +2,7 @@
 #define IOPINS_H
 
 #include "platform_config.h"
+#include "pinmap.h" // central pin mapping for this build
 
 
 #ifdef MCUME_REV1
@@ -54,7 +55,7 @@
 // Speaker
 #define AUDIO_PIN       9
 // VGA
-/* RRRGGGBB
+/* RRGGBB
    CSYNC */
 #define VGA_COLORBASE   0
 #define VGA_SYNCBASE    8
@@ -72,7 +73,9 @@
 
 #else /* PICOZX */
 // Speaker
+#ifndef AUDIO_PIN
 #define AUDIO_PIN       0
+#endif
 // VGA
 /* RRRGGGBB
    VSYNC and HSYNC */
@@ -99,10 +102,23 @@
 // TFT
 #define TFT_SPIREG      spi0
 #define TFT_SPIDREQ     DREQ_SPI0_TX
+
+// Use pinmap overrides for ILI9341 when present
+#ifdef ILI9341
+#define TFT_SCLK        ILI9341_SCK_PIN
+#define TFT_MOSI        ILI9341_MOSI_PIN
+#define TFT_MISO        ILI9341_MISO_PIN
+#define TFT_DC          ILI9341_DC_PIN
+#define TFT_CS          ILI9341_CS_PIN
+#define TFT_RST         ILI9341_RST_PIN
+#else
 #define TFT_SCLK        18
 #define TFT_MOSI        19
 #define TFT_MISO        255 // Not required, used for DC... 
 #define TFT_DC          16
+#define TFT_RST         21
+#define TFT_CS          17
+#endif
 
 #ifdef PICOMPUTER
 #ifdef PICOMPUTERMAX
@@ -111,15 +127,13 @@
 #define TFT_BACKLIGHT   20
 
 #else /* end PICOMPUTERMAX */
-#define TFT_RST         21
+#define TFT_RST         255
 #define TFT_CS          255
 #define TFT_BACKLIGHT   20
 #endif
 
 #else /* end PICOMPUTER */
 // MCUME_REV2 (ILI)
-#define TFT_RST         21
-#define TFT_CS          17
 #define TFT_BACKLIGHT   255 // hardwired to 3.3v
 #endif
 #endif
@@ -138,7 +152,6 @@
 #define PSRAM_MOSI      19
 #define PSRAM_MISO      16 // DC
 #define PSRAM_CS        17
-
 
 #ifdef PICOMPUTER
 
@@ -226,7 +239,6 @@
 #define PIN_KEY_USER1   20
 #define PIN_KEY_USER2   21 
 
-#endif
 #endif
 #endif
 #endif
